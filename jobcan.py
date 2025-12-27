@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# 申請書情報の取得
+# ジョブカン経費精算/ワークフローAPI（β版）のPythonインタフェース
+# https://ssl.wf.jobcan.jp/api_doc
 
 import requests
 import json
 import os
+import jsondb
 
 
 class Jobcan:
@@ -26,6 +28,10 @@ class Jobcan:
             }
             self.base_url = config["base_url"]
 
+            cache_file = config["cache_file"]
+            self.cache = jsondb.JsonDB()
+            self.cache.open(cache_file)
+
     def get(self, url):
         response = requests.get(url, headers=self.headers)
         return response
@@ -37,14 +43,27 @@ class Jobcan:
 
     def request(self, request_id):
         """
-        request_id で指定した申請の情報を取得する。
-        """
+        申請の詳細情報を取得する。キャッシュに情報がある場合は使用し、なければジョブカンAPIから情報を取得する。
 
+        Args:
+            request_id:  申請ID
+        """
+        res = self.cache.get("requests", request_id)
+        if res:
+            print("hit cache")
+            return res
+
+        print("miss cache")
         url = f"{self.base_url}/v1/requests/{request_id}/"
         response = self.get(url)
         data = response.json()
 
         if response.status_code == 200:
+            print("add cache")
+            d = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+            self.cache.set("requests", request_id, d)
+            self.cache.commit()
+
             return data
         elif response.status_code == 404:
             self.abort(url, response)
@@ -84,7 +103,7 @@ class Jobcan:
             if response.status_code == 200:
                 body = response.json()
                 results += body["results"]
-                if body["next"] == None:
+                if body["next"] is None:
                     break
                 else:
                     url = body["next"]
@@ -102,12 +121,15 @@ class Jobcan:
 
     def test(self):
         """
-        接続テスト。APIトークンの設定値が正しいかどうかのテスト等
+        接続テスト用のAPI。APIトークンの設定値が正しいかどうかのテスト等に用いる。
         """
         response = self.get(f"{self.base_url}/test/")
         return int(response.status_code)
 
     def forms(self):
+        """
+        フォーム一覧を取得する。
+        """
         url = f"{self.base_url}/v1/forms/"
         results = []
 
@@ -117,7 +139,7 @@ class Jobcan:
             if response.status_code == 200:
                 body = response.json()
                 results += body["results"]
-                if body["next"] == None:
+                if body["next"] is None:
                     break
                 else:
                     url = body["next"]
@@ -159,7 +181,7 @@ def filter_waiting_at(req_list, name):
             if step["status"] == "承認待ち":
                 step_found = step
                 break
-        if step_found == None:
+        if step_found is None:
             continue
 
         for approver in step_found["approvers"]:
