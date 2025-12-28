@@ -50,19 +50,20 @@ class Jobcan:
         """
         res = self.cache.get("requests", request_id)
         if res:
-            print("hit cache")
+            # print("hit cache")
             return res
 
-        print("miss cache")
+        # print("miss cache")
         url = f"{self.base_url}/v1/requests/{request_id}/"
         response = self.get(url)
         data = response.json()
 
         if response.status_code == 200:
-            print("add cache")
-            d = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
-            self.cache.set("requests", request_id, d)
-            self.cache.commit()
+            if data["status"] == "completed":
+                # print("add cache")
+                d = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+                self.cache.set("requests", request_id, d)
+                self.cache.commit()
 
             return data
         elif response.status_code == 404:
