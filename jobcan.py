@@ -74,17 +74,34 @@ class Jobcan:
             print("仕様外の応答")
             exit(1)
 
-    def requests(self, form_id, status):
+    def requests(self, **kwargs):
         """
-        form_id, status で指定した条件にマッチする申請のリストを取得する。
+        kwargs で指定した条件にマッチする申請書情報のリストを取得する。
         """
 
-        args = f"?status={status}&form_id={form_id}"
-        url = f"{self.base_url}/v2/requests/" + args
-        result = []
+        args = []
+        if "status" in kwargs:
+            args.append("status={}".format(kwargs["status"]))
+        if "form_id" in kwargs:
+            args.append("form_id={}".format(kwargs["form_id"]))
+        if "completed_before" in kwargs:
+            args.append("completed_before={}".format(kwargs["completed_before"]))
+        if "completed_after" in kwargs:
+            args.append("completed_after={}".format(kwargs["completed_after"]))
+
+        query = "?" + "&".join(args)
+        url = f"{self.base_url}/v2/requests/" + query
 
         req_list = self.__get_requests_seq(url)
+        return req_list
 
+    def requests_details(self, **kwargs):
+        """
+        kwargs で指定した条件にマッチする申請書情報のリストを取得し、さらにそれぞれの申請書の詳細を取得する。
+        """
+        result = []
+
+        req_list = self.requests(**kwargs)
         for i in req_list:
             r = self.request(i["id"])
             result.append(r)
