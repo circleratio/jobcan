@@ -49,9 +49,11 @@ def command_requests(args):
     jc = jobcan.Jobcan()
     if args.details:
         if args.form_id is None:
-            print('Query for detailed information is allowed only for a single form. Aborted.')
+            print(
+                "Query for detailed information is allowed only for a single form. Aborted."
+            )
             exit(1)
-            
+
         res = jc.requests_details(**req_arg)
     else:
         res = jc.requests(**req_arg)

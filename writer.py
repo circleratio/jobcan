@@ -3,9 +3,10 @@ from openpyxl.styles import Border, Side
 from openpyxl.drawing.image import Image
 import os
 import json
+import jobcan
 
 
-class excel:
+class ExcelApp:
     def __init__(self, path, **kwargs):
         self.path = path
         self.modified = False
@@ -57,6 +58,10 @@ class excel:
         self.modified = True
         self.ws.cell(row, col).number_format = number_format
 
+    def hyperlink(self, row, col, link):
+        self.modified = True
+        self.ws.cell(row, col).hyperlink = link
+
     def value(self, row, col):
         return self.ws.cell(row, col).value
 
@@ -66,6 +71,32 @@ class excel:
             row += 1
 
         return row
+
+
+def excel(request_list, args, output_format, excel_style):
+    ex = ExcelApp(args["output_file"], style=excel_style, override=args["override"])
+
+    row = 2
+    for item in request_list:
+        item["applicant_full_name"] = (
+            item["applicant_last_name"] + " " + item["applicant_first_name"]
+        )
+        col = 1
+        for fmt in output_format:
+            tmp = ""
+            if fmt["column"] == "custom":
+                ci = item["detail"]["customized_items"]
+                tmp = jobcan.parse_customized_items(ci, fmt["custom"], "content")
+            else:
+                tmp = item[fmt["column"]]
+            ex.write(row, col, tmp)
+
+            if "format" in fmt:
+                ex.number_format(row, col, fmt["format"])
+            if "link" in fmt and fmt["link"] == "requests":
+                ex.hyperlink(row, col, f"https://ssl.wf.jobcan.jp/#/requests/{tmp}")
+            col += 1
+        row += 1
 
 
 def console(json_dict):
