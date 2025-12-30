@@ -4,9 +4,11 @@
 # ジョブカン経費精算/ワークフローAPI（β版）のPythonインタフェース
 # https://ssl.wf.jobcan.jp/api_doc
 
-import requests
 import json
 import os
+
+import requests
+
 import jsondb
 
 

@@ -1,8 +1,10 @@
-import openpyxl
-from openpyxl.styles import Border, Side
-from openpyxl.drawing.image import Image
-import os
 import json
+import os
+
+import openpyxl
+from openpyxl.drawing.image import Image
+from openpyxl.styles import Border, Side
+
 import jobcan
 
 
