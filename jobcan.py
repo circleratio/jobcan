@@ -9,7 +9,7 @@ import os
 
 import requests
 
-import jsondb
+from . import jsondb
 
 
 class Jobcan:

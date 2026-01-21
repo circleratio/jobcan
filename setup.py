@@ -4,7 +4,7 @@
 import json
 import os
 
-import jsondb
+from . import jsondb
 
 work_dir = os.path.dirname(__file__)
 config_file = f"{work_dir}/config.json"

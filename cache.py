@@ -5,8 +5,7 @@ import argparse
 import json
 import os
 
-import jsondb
-import writer
+from . import jsondb, writer
 
 
 def print_row(row):

@@ -4,7 +4,7 @@
 import argparse
 import json
 
-import jobcan
+from . import jobcan
 
 
 def command_forms(args):
