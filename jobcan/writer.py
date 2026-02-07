@@ -73,9 +73,43 @@ class ExcelApp:
 
         return row
 
+    def format_cell(self, row, col, fmt, jobcan_id):
+        if "format" in fmt:
+            self.number_format(row, col, fmt["format"])
+        if "link" in fmt and fmt["link"] == "request":
+            self.hyperlink(row, col, f"https://ssl.wf.jobcan.jp/#/requests/{jobcan_id}")
 
-def excel(request_list, args, output_format, excel_style):
+def excel_write_detail(ex, details, detail_format, row, col):
+    r = 0
+    for detail in details:
+        c = 0
+        step_col = len(detail) 
+        for d in detail:
+            if detail_format[c]["format_type"] == "master":
+                if type(d['value']) == dict:
+                    ex.write(row + r, col + c, d['value']['record_name'])
+                else:
+                    ex.write(row + r, col + c, d['value'])
+            elif detail_format[c]["format_type"] == "price":
+                ex.write(row + r, col + c, d['value'])
+                ex.number_format(row + r, col + c, detail_format[c]["format"])
+            else:
+                ex.write(row + r, col + c, d['value'])
+                
+            c += 1
+        r += 1
+    step_row = len(details)
+
+    return(step_row, step_col)
+                
+    
+def excel(request_list, args, output_format, excel_style, **kwargs):
     ex = ExcelApp(args["output_file"], style=excel_style, override=args["override"])
+
+    if 'detail_format' in kwargs:
+        detail_format = kwargs['detail_format']
+    else:
+        detail_format = None
 
     row = 2
     for item in request_list:
@@ -83,21 +117,26 @@ def excel(request_list, args, output_format, excel_style):
             item["applicant_last_name"] + " " + item["applicant_first_name"]
         )
         col = 1
+        step_row = 1
         for fmt in output_format:
+            step_col = 1
             tmp = ""
             if fmt["column"] == "custom":
                 ci = item["detail"]["customized_items"]
                 tmp = jobcan.parse_customized_items(ci, fmt["custom"], "content")
+                ex.write(row, col, tmp)
+                ex.format_cell(row, col, fmt, tmp)
+            elif fmt["column"] == "detail":
+                ci = item["detail"]["customized_items"]
+                details = jobcan.parse_customized_items(ci, "明細", "table")
+                step_row, step_col = excel_write_detail(ex, details, detail_format, row, col)
             else:
                 tmp = item[fmt["column"]]
-            ex.write(row, col, tmp)
+                ex.write(row, col, tmp)
+                ex.format_cell(row, col, fmt, tmp)
 
-            if "format" in fmt:
-                ex.number_format(row, col, fmt["format"])
-            if "link" in fmt and fmt["link"] == "requests":
-                ex.hyperlink(row, col, f"https://ssl.wf.jobcan.jp/#/requests/{tmp}")
-            col += 1
-        row += 1
+            col += step_col
+        row += step_row
 
 
 def console(json_dict):
