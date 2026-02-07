@@ -7,6 +7,7 @@ from openpyxl.styles import Border, Side
 
 from . import jobcan
 
+
 class ExcelApp:
     def __init__(self, path, **kwargs):
         self.path = path
@@ -79,35 +80,36 @@ class ExcelApp:
         if "link" in fmt and fmt["link"] == "request":
             self.hyperlink(row, col, f"https://ssl.wf.jobcan.jp/#/requests/{jobcan_id}")
 
+
 def excel_write_detail(ex, details, detail_format, row, col):
     r = 0
     for detail in details:
         c = 0
-        step_col = len(detail) 
+        step_col = len(detail)
         for d in detail:
             if detail_format[c]["format_type"] == "master":
-                if type(d['value']) == dict:
-                    ex.write(row + r, col + c, d['value']['record_name'])
+                if type(d["value"]) == dict:
+                    ex.write(row + r, col + c, d["value"]["record_name"])
                 else:
-                    ex.write(row + r, col + c, d['value'])
+                    ex.write(row + r, col + c, d["value"])
             elif detail_format[c]["format_type"] == "price":
-                ex.write(row + r, col + c, d['value'])
+                ex.write(row + r, col + c, d["value"])
                 ex.number_format(row + r, col + c, detail_format[c]["format"])
             else:
-                ex.write(row + r, col + c, d['value'])
-                
+                ex.write(row + r, col + c, d["value"])
+
             c += 1
         r += 1
     step_row = len(details)
 
-    return(step_row, step_col)
-                
-    
+    return (step_row, step_col)
+
+
 def excel(request_list, args, output_format, excel_style, **kwargs):
     ex = ExcelApp(args["output_file"], style=excel_style, override=args["override"])
 
-    if 'detail_format' in kwargs:
-        detail_format = kwargs['detail_format']
+    if "detail_format" in kwargs:
+        detail_format = kwargs["detail_format"]
     else:
         detail_format = None
 
@@ -129,7 +131,9 @@ def excel(request_list, args, output_format, excel_style, **kwargs):
             elif fmt["column"] == "detail":
                 ci = item["detail"]["customized_items"]
                 details = jobcan.parse_customized_items(ci, "明細", "table")
-                step_row, step_col = excel_write_detail(ex, details, detail_format, row, col)
+                step_row, step_col = excel_write_detail(
+                    ex, details, detail_format, row, col
+                )
             else:
                 tmp = item[fmt["column"]]
                 ex.write(row, col, tmp)
