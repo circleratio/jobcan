@@ -5,11 +5,9 @@
 # https://ssl.wf.jobcan.jp/api_doc
 
 import json
-import os
-
 import requests
 
-from . import jsondb
+from .jsondb import JsonDB
 
 
 class Jobcan:
@@ -17,10 +15,7 @@ class Jobcan:
     Jobcan API wrapper
     """
 
-    def __init__(self):
-        work_dir = os.path.dirname(__file__)
-        config_path = f"{work_dir}/config.json"
-
+    def __init__(self, config_path):
         with open(config_path) as f:
             config = json.load(f)
             api_token = config["api_token"]
@@ -31,7 +26,7 @@ class Jobcan:
             self.base_url = config["base_url"]
 
             cache_file = config["cache_file"]
-            self.cache = jsondb.JsonDB()
+            self.cache = JsonDB()
             self.cache.open(cache_file)
 
     def get(self, url):

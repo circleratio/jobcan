@@ -3,12 +3,16 @@
 
 import argparse
 import json
+import os
 
-from . import jobcan
+from jobcan import jobcan
+
+work_dir = os.path.dirname(__file__)
+config_path = f"{work_dir}/config.json"
 
 
 def command_forms(args):
-    jc = jobcan.Jobcan()
+    jc = jobcan.Jobcan(config_path)
     res = jc.forms()
 
     if args.long:
@@ -19,13 +23,13 @@ def command_forms(args):
 
 
 def command_request(args):
-    jc = jobcan.Jobcan()
+    jc = jobcan.Jobcan(config_path)
     res = jc.request(args.jobcan_id)
     print(json.dumps(res, indent=2, ensure_ascii=False))
 
 
 def command_test(jc):
-    jc = jobcan.Jobcan()
+    jc = jobcan.Jobcan(config_path)
     res = jc.test()
     if res == 200:
         print("正常(200)")
@@ -47,7 +51,7 @@ def command_requests(args):
     if args.completed_after:
         req_arg["completed_after"] = args.completed_after.replace("'", "")
 
-    jc = jobcan.Jobcan()
+    jc = jobcan.Jobcan(config_path)
     if args.details:
         if args.form_id is None:
             print(
