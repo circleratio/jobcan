@@ -5,8 +5,7 @@ import openpyxl
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Border, Side
 
-import jobcan
-
+from . import jobcan
 
 class ExcelApp:
     def __init__(self, path, **kwargs):
